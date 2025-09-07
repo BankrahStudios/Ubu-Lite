@@ -4,6 +4,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from .models import User, CreativeProfile, Service, Booking, Message
 from .serializers import (
@@ -49,7 +50,7 @@ class ServiceViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         user = self.request.user
         if not hasattr(user, "profile"):
-            return  # will 403 via permission class on subsequent operations
+            raise PermissionDenied("Only creatives with a profile may create services.")
         serializer.save(creative_profile=user.profile)
 
 
@@ -65,6 +66,33 @@ class BookingViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(client=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            raise ValidationError(serializer.errors)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def update(self, request, *args, **kwargs):
+        # Allow creatives to update booking status via PUT
+        partial = kwargs.pop('partial', False)
+        booking = self.get_object()
+        if 'status' in request.data:
+            # Only the creative may update status
+            if booking.service.creative_profile.user != request.user:
+                return Response({"detail": "Only the creative can update status."}, status=403)
+            new_status = (request.data.get('status') or '').lower()
+            valid = {c for c, _ in Booking.Status.choices}
+            if new_status not in valid:
+                return Response({"detail": "Invalid status."}, status=400)
+            booking.status = new_status
+            booking.save()
+            return Response(BookingSerializer(booking).data)
+
+        # Otherwise, delegate to default update (e.g., cancel/delete by client)
+        return super().update(request, *args, **kwargs)
 
     @action(detail=True, methods=["put", "patch"])
     def status(self, request, pk=None):
@@ -100,5 +128,5 @@ class MessageViewSet(viewsets.ModelViewSet):
         booking_id = self.kwargs.get("booking_id") or self.request.data.get("booking")
         booking = get_object_or_404(Booking, pk=booking_id)
         if self.request.user not in booking.participants():
-            return Response({"detail": "Only booking participants can post messages."}, status=403)
+            raise PermissionDenied("Only booking participants can post messages.")
         serializer.save(booking=booking, sender=self.request.user)

@@ -16,8 +16,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.http import JsonResponse
+
+
+def root_view(request):
+    """Simple JSON root view to make the base URL return a small API fingerprint."""
+    return JsonResponse({"ok": True, "api": "/api/", "admin": "/admin/"})
 
 urlpatterns = [
+    path("", root_view),
     path("admin/", admin.site.urls),
     path("api/", include("marketplace.urls")),  # ← market place urls
 ]

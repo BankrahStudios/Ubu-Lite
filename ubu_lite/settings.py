@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-24!il%u!xs)!(4)2n)a@q098m5n!m(=yoh)-rrrle3l)!8gpqr
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "testserver"]
 
 
 # Application definition
@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     "rest_framework",
 
     # --- Local apps ---
-    "marketplace.apps.MarketplaceConfig",  # use AppConfig
+    "marketplace.apps.MarketplaceConfig",  # AppConfig
 ]
 
 AUTH_USER_MODEL = "marketplace.User"

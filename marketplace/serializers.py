@@ -25,15 +25,21 @@ class ServiceSerializer(serializers.ModelSerializer):
         fields = ["id", "creative_profile", "title", "description", "category", "price"]
 
 class BookingSerializer(serializers.ModelSerializer):
+    client = serializers.PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
         model = Booking
         fields = ["id", "service", "client", "date", "status"]
         read_only_fields = ["status"]
 
+    def create(self, validated_data):
+        # status is always defaulted; client is set in view
+        return super().create(validated_data)
+
 class MessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Message
         fields = ["id", "booking", "sender", "content", "timestamp"]
-        read_only_fields = ["timestamp"]
+        read_only_fields = ["timestamp", "sender", "booking"]
 
 
