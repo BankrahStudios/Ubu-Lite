@@ -1,0 +1,8 @@
+body{background:#f8fafc;color:#0f172a;font-family:Inter,system-ui,Arial;margin:0}
+.container{max-width:900px;margin:48px auto;padding:24px}
+.card{background:#fff;border-radius:12px;padding:36px;text-align:center;box-shadow:0 6px 18px rgba(2,6,23,0.08)}
+.emoji{width:96px;height:96px;opacity:0.95;margin-bottom:8px}
+h1{font-size:30px;margin:6px 0}
+.actions{margin-top:18px}
+a.btn{display:inline-block;padding:8px 12px;background:#111827;color:#fff;border-radius:8px;text-decoration:none}
+p.muted{color:#6b7280;margin:8px 0}

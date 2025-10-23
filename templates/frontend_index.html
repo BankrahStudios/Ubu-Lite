@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>UBU Lite — Frontend index</title>
+  <style>
+    body{font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial; margin:24px; color:#111827}
+    h1{font-size:28px}
+    .list{margin-top:12px}
+    a.card{display:block;padding:12px 14px;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:8px;text-decoration:none;color:inherit}
+    .muted{color:#6b7280;font-size:13px}
+  </style>
+</head>
+<body>
+  <h1>UBU Lite — Frontend pages</h1>
+  <p class="muted">Links to available front-end pages, anchors, and the React app (if you run its dev server).</p>
+
+  <div class="list">
+    <a class="card" href="/">Single-file HTML demo (templates/index.html)</a>
+    <a class="card" href="/front-end/#index-anchors">This page (index)</a>
+    <a class="card" href="/front-end/#anchors-overlays">Demo anchors/overlays within the HTML demo</a>
+    <a class="card" href="/front-end/#react-app">React homepage (templates/ubu-lite-homepage)</a>
+    <a class="card" href="/wallet">Wallet (React SPA route)</a>
+    <a class="card" href="/escrows">Escrows (React SPA route)</a>
+  </div>
+
+  <h2 id="index-anchors">Anchors and overlay examples in the HTML demo</h2>
+  <ul>
+    <li><a href="/">Browse view (default)</a></li>
+    <li><a href="/#profile-shay">Shay profile overlay</a></li>
+    <li><a href="/#profile-yaaa">Yaaa profile overlay</a></li>
+    <li><a href="/#profile-nova">Nova profile overlay</a></li>
+    <li><a href="/#book-shay">Book Shay modal</a></li>
+    <li><a href="/#booking-success">Booking success modal</a></li>
+  </ul>
+
+  <h2 id="anchors-overlays">Demo JS flows (from index.html)</h2>
+  <p class="muted">The single-file demo includes tiny demo functions used from the browser console:</p>
+  <ul>
+    <li><code>window.demoRegisterAndBook()</code> — create a demo user and book a service via the API</li>
+    <li><code>window.demoCheckout()</code> — create a PaymentIntent for your first order</li>
+    <li><code>window.demoCreateOrderAndCheckout()</code> — create an order then open Stripe card modal</li>
+  </ul>
+
+  <h2 id="react-app">React app (development)</h2>
+  <p class="muted">The React TypeScript homepage lives at <code>templates/ubu-lite-homepage</code>. To run it locally:</p>
+  <pre class="muted">cd templates/ubu-lite-homepage; npm install; npm start</pre>
+  <p class="muted">If the React dev server is not running, you can build the React app and serve it from Django at <a href="/react-app/">/react-app/</a></p>
+  <p class="muted">Build instructions (writes into <code>templates/ubu-lite-homepage/build</code>):</p>
+  <pre class="muted">cd templates/ubu-lite-homepage
+npm install
+npm run build
+# make sure the build/ directory exists in templates/ubu-lite-homepage
+</pre>
+
+  <h2>Notes</h2>
+  <ul>
+    <li>To view Stripe flows you must set <code>STRIPE_PUBLISHABLE_KEY</code> and <code>STRIPE_SECRET_KEY</code> in your environment.</li>
+    <li>The React app is a separate dev server; in production you can build it and serve files from Django static files.</li>
+  </ul>
+</body>
+</html>

@@ -1,0 +1,126 @@
+"""
+URL configuration for ubu_lite project.
+
+The `urlpatterns` list routes URLs to views. For more information please see:
+    https://docs.djangoproject.com/en/dev/topics/http/urls/
+Examples:
+Function views
+    1. Add an import:  from my_app import views
+    2. Add a URL to urlpatterns:  path('', views.home, name='home')
+Class-based views
+    1. Add an import:  from other_app.views import Home
+    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
+Including another URLconf
+    1. Import the include() function: from django.urls import include, path
+    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+"""
+
+from pathlib import Path
+import mimetypes
+
+from django.contrib import admin
+from django.http import FileResponse
+from django.shortcuts import render
+from django.urls import include, path, re_path
+from django.conf.urls.static import static
+from django.conf import settings
+
+# compute project base dir for locating the React build
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+def root_view(request):
+    # Render friendly landing page from templates/index.html
+    return render(request, "homepage.html")
+
+
+def frontends_index(request):
+    # A simple page listing available front-end pages and anchors
+    return render(request, "frontend_index.html")
+
+
+def react_fallback(request):
+    # Lightweight fallback for the React homepage when the dev server isn't running.
+    return render(request, "react_fallback.html")
+
+
+def react_app(request, rest: str | None = None):
+    # Serve the built React app index.html if present in
+    # templates/ubu-lite-homepage/build/index.html
+    # If `rest` is provided, try to serve that asset from the build folder;
+    # otherwise fall back to index.html for SPA routing.
+    build_dir = BASE_DIR / "templates" / "ubu-lite-homepage" / "build"
+    build_index = build_dir / "index.html"
+
+    if rest:
+        candidate = build_dir / rest
+        if candidate.exists() and candidate.is_file():
+            ctype, _ = mimetypes.guess_type(str(candidate))
+            return FileResponse(open(candidate, "rb"), content_type=ctype or "application/octet-stream")
+
+    if build_index.exists():
+        return FileResponse(open(build_index, "rb"), content_type="text/html")
+    return render(request, "react_fallback.html")
+
+
+def login_page(request):
+    ctx = {"GOOGLE_CLIENT_ID": getattr(settings, "GOOGLE_CLIENT_ID", "")}
+    return render(request, "login.html", ctx)
+
+
+def register_page(request):
+    ctx = {"GOOGLE_CLIENT_ID": getattr(settings, "GOOGLE_CLIENT_ID", "")}
+    return render(request, "register.html", ctx)
+
+
+urlpatterns = [
+    # Serve the built React homepage by default so users don't need the dev server
+    path("", react_app),
+    # Route FAQ to the built React app as well (SPA routing)
+    path("faq/", react_app, name="faq"),
+    path("book/", react_app, name="book"),
+    path("terms/", react_app, name="terms"),
+    path("privacy/", react_app, name="privacy"),
+    path("creatives/", react_app, name="spa-creatives"),
+    path("creatives/<path:rest>", react_app, name="spa-creatives-detail"),
+    path("app-login/", react_app, name="spa-login"),
+    path("app-register/", react_app, name="spa-register"),
+    # Map additional SPA routes to React build so client-side router can handle them
+    path("services/", react_app, name="spa-services"),
+    path("services/<path:rest>", react_app, name="spa-services-detail"),
+    path("marketplace/", react_app, name="spa-marketplace"),
+    path("bookings/", react_app, name="spa-bookings"),
+    path("messages/", react_app, name="spa-messages"),
+    path("checkout/", react_app, name="spa-checkout"),
+    # Wallet & Escrows SPA routes
+    path("wallet/", react_app, name="spa-wallet"),
+    path("escrows/", react_app, name="spa-escrows"),
+    path("contact/", react_app, name="contact"),
+    path("front-end/", frontends_index, name="front-end"),
+    path("react/", react_fallback, name="react-fallback"),
+    path("react-app/", react_app, name="react-app"),
+    path("react-app/<path:rest>", react_app, name="react-app-deeplink"),
+    path("admin/", admin.site.urls),
+    path("api/", include("marketplace.urls")),  # ← market place urls
+]
+def login_page(request):
+    return render(request, "login.html")
+
+
+def register_page(request):
+    return render(request, "register.html")
+
+
+urlpatterns += [
+    path("login/", login_page, name="login"),
+    path("register/", register_page, name="register"),
+]
+
+# Serve media files in development
+from django.conf import settings as _settings
+if _settings.DEBUG:
+    urlpatterns += static(_settings.MEDIA_URL, document_root=_settings.MEDIA_ROOT)
+    # Serve top-level image assets from CRA build when requested at site root
+    urlpatterns += [
+        re_path(r"^(?P<rest>.+\.(?:png|jpg|jpeg|svg|webp|gif))$", react_app),
+    ]

@@ -13,3 +13,7 @@ db.sqlite3
 
 # logs
 *.log
+
+
+#Ignore vscode AI rules
+.github\instructions\codacy.instructions.md

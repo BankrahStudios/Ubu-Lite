@@ -1,26 +1,52 @@
-from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.db import models
+from django.utils import timezone
+
 
 class User(AbstractUser):
     class Roles(models.TextChoices):
         CREATIVE = "creative", "Creative"
         CLIENT = "client", "Client"
+
     role = models.CharField(max_length=16, choices=Roles.choices)
 
     def is_creative(self):
         return self.role == self.Roles.CREATIVE
+
 
 class CreativeProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     bio = models.TextField(blank=True)
     skills = models.CharField(max_length=255, blank=True)
     portfolio_links = models.TextField(blank=True)
-    hourly_rate = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    avatar = models.FileField(upload_to="avatars/", blank=True, null=True)
+    hourly_rate = models.DecimalField(
+        max_digits=8, decimal_places=2, null=True, blank=True
+    )
     city = models.CharField(max_length=64, blank=True)
     region = models.CharField(max_length=64, blank=True)
 
     def __str__(self):
         return f"{self.user.username}"
+
+
+class PortfolioItem(models.Model):
+    class MediaType(models.TextChoices):
+        IMAGE = "image", "Image"
+        VIDEO = "video", "Video"
+
+    profile = models.ForeignKey(
+        CreativeProfile, on_delete=models.CASCADE, related_name="portfolio_items"
+    )
+    title = models.CharField(max_length=160)
+    media_type = models.CharField(max_length=16, choices=MediaType.choices)
+    file = models.FileField(upload_to="portfolio/", blank=True)
+    external_url = models.URLField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.title} ({self.media_type})"
+
 
 class Service(models.Model):
     creative_profile = models.ForeignKey(
@@ -28,11 +54,15 @@ class Service(models.Model):
     )
     title = models.CharField(max_length=120)
     description = models.TextField()
-    category = models.CharField(max_length=64)
+    # Normalize category to FK
+    category = models.ForeignKey(
+        "Category", on_delete=models.SET_NULL, null=True, blank=True, related_name="services"
+    )
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
         return self.title
+
 
 class Booking(models.Model):
     class Status(models.TextChoices):
@@ -40,19 +70,234 @@ class Booking(models.Model):
         APPROVED = "approved", "Approved"
         DECLINED = "declined", "Declined"
 
-    service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name="bookings")
+    service = models.ForeignKey(
+        Service, on_delete=models.CASCADE, related_name="bookings"
+    )
     client = models.ForeignKey(User, on_delete=models.CASCADE, related_name="bookings")
     date = models.DateTimeField()
-    status = models.CharField(max_length=16, choices=Status.choices, default=Status.PENDING)
+    status = models.CharField(
+        max_length=16, choices=Status.choices, default=Status.PENDING
+    )
+    duration_minutes = models.PositiveSmallIntegerField(null=True, blank=True)
+    notes = models.TextField(blank=True)
+    meet_url = models.CharField(max_length=300, blank=True)
+    decision_at = models.DateTimeField(null=True, blank=True)
 
     def participants(self):
         return [self.client, self.service.creative_profile.user]
 
+
 class Message(models.Model):
-    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name="messages")
+    booking = models.ForeignKey(
+        Booking, on_delete=models.CASCADE, related_name="messages"
+    )
     sender = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["timestamp"]
+
+
+class Category(models.Model):
+    """Optional explicit category model to support hierarchical browsing."""
+
+    slug = models.SlugField(max_length=80, unique=True)
+    name = models.CharField(max_length=120)
+    description = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.name
+
+
+class GigExtra(models.Model):
+    """Optional add-ons a buyer can attach to an order."""
+
+    service = models.ForeignKey(
+        "Service", on_delete=models.CASCADE, related_name="extras"
+    )
+    title = models.CharField(max_length=120)
+    description = models.TextField(blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.service.title} + {self.title}"
+
+
+class Order(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        PAID = "paid", "Paid"
+        IN_PROGRESS = "in_progress", "In progress"
+        DELIVERED = "delivered", "Delivered"
+        COMPLETED = "completed", "Completed"
+        CANCELLED = "cancelled", "Cancelled"
+
+    service = models.ForeignKey(
+        "Service", on_delete=models.PROTECT, related_name="orders"
+    )
+    buyer = models.ForeignKey(User, on_delete=models.PROTECT, related_name="orders")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    delivery_deadline = models.DateTimeField(null=True, blank=True)
+    total_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    status = models.CharField(
+        max_length=20, choices=Status.choices, default=Status.PENDING
+    )
+    instructions = models.TextField(blank=True)
+
+    def seller(self):
+        return self.service.creative_profile.user
+
+    def participants(self):
+        return [self.buyer, self.seller()]
+
+    def __str__(self):
+        return f"Order #{self.pk} {self.service.title} ({self.status})"
+
+
+class OrderExtra(models.Model):
+    order = models.ForeignKey(
+        Order, on_delete=models.CASCADE, related_name="order_extras"
+    )
+    extra = models.ForeignKey(GigExtra, on_delete=models.PROTECT)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.order} - {self.extra.title}"
+
+
+class Review(models.Model):
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name="review")
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    rating = models.PositiveSmallIntegerField()
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Review {self.rating} - {self.order}"
+
+
+class PaymentTransaction(models.Model):
+    """Minimal payment record used as a stub for payment provider integrations."""
+
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="payments")
+    provider = models.CharField(max_length=40, blank=True)  # e.g. 'stripe'
+    provider_id = models.CharField(
+        max_length=200, blank=True
+    )  # provider charge/intent id
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    status = models.CharField(max_length=40, default="initiated")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Payment {self.provider} {self.provider_id} ({self.status})"
+
+
+# ---- Escrow & Payouts ----
+class CreativeWallet(models.Model):
+    """Simple wallet to hold creator earnings for later cashout."""
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="wallet")
+    available_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    pending_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Wallet({self.user.username}) avail={self.available_balance}"
+
+    @staticmethod
+    def for_user(user: User) -> "CreativeWallet":
+        wallet, _ = CreativeWallet.objects.get_or_create(user=user)
+        return wallet
+
+
+class Escrow(models.Model):
+    class Status(models.TextChoices):
+        FUNDED = "funded", "Funded"
+        RELEASED = "released", "Released"
+        REFUNDED = "refunded", "Refunded"
+        CANCELLED = "cancelled", "Cancelled"
+
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name="escrow")
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    fee_percent = models.DecimalField(max_digits=5, decimal_places=2, default=33)
+    fee_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    creator_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.FUNDED)
+    client_fulfilled = models.BooleanField(default=False)
+    creative_fulfilled = models.BooleanField(default=False)
+    released_at = models.DateTimeField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Escrow(order={self.order_id}, {self.status}, amt={self.amount})"
+
+    def split_amounts(self):
+        # 33% platform fee, 67% to creative by default
+        fee = (self.amount * self.fee_percent) / 100
+        creator = self.amount - fee
+        return fee, creator
+
+    def maybe_release(self):
+        if self.status != self.Status.FUNDED:
+            return False
+        if not (self.client_fulfilled and self.creative_fulfilled):
+            return False
+        fee, creator = self.split_amounts()
+        self.fee_amount = fee
+        self.creator_amount = creator
+        self.status = self.Status.RELEASED
+        self.released_at = timezone.now()
+        self.save(update_fields=["fee_amount", "creator_amount", "status", "released_at", "updated_at"])
+
+        # credit creator wallet
+        creator_user = self.order.service.creative_profile.user
+        wallet = CreativeWallet.for_user(creator_user)
+        wallet.available_balance = wallet.available_balance + creator
+        wallet.save(update_fields=["available_balance", "updated_at"])
+        return True
+
+
+class WithdrawalRequest(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        APPROVED = "approved", "Approved"
+        PAID = "paid", "Paid"
+        REJECTED = "rejected", "Rejected"
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="withdrawals")
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.PENDING)
+    created_at = models.DateTimeField(auto_now_add=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Withdrawal({self.user.username}, {self.amount}, {self.status})"
+
+    def approve(self):
+        if self.status != self.Status.PENDING:
+            return False
+        wallet = CreativeWallet.for_user(self.user)
+        if self.amount > wallet.available_balance:
+            return False
+        wallet.available_balance = wallet.available_balance - self.amount
+        wallet.pending_balance = wallet.pending_balance + self.amount
+        wallet.save(update_fields=["available_balance", "pending_balance", "updated_at"])
+        self.status = self.Status.APPROVED
+        self.processed_at = timezone.now()
+        self.save(update_fields=["status", "processed_at"]) 
+        return True
+
+    def mark_paid(self):
+        if self.status != self.Status.APPROVED:
+            return False
+        # In a real integration, move funds via provider and then mark paid.
+        wallet = CreativeWallet.for_user(self.user)
+        wallet.pending_balance = wallet.pending_balance - self.amount
+        wallet.save(update_fields=["pending_balance", "updated_at"])
+        self.status = self.Status.PAID
+        self.processed_at = timezone.now()
+        self.save(update_fields=["status", "processed_at"])

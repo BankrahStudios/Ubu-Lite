@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>UBU Lite · Creative Booking (HTML + CSS only)</title>
+  <style>
+    /* ===============
+       UBU Lite – HTML/CSS only
+       Color palette (TLNI-inspired):
+       Beige  : #EEE0C5
+       Sage   : #93C5B4
+       Charcoal: #212827
+       =============== */
+
+    :root{
+      --beige:#EEE0C5; --sage:#93C5B4; --charcoal:#212827; --ink:#1f2937; --muted:#6b7280; --bg:#fafaf9; --white:#fff; --ring: 0 0 0 3px rgba(147,197,180,.35);
+      --radius: 16px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family: ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--ink); background:
+        linear-gradient(180deg,var(--beige),#fff 40%,rgba(147,197,180,.12));
+    }
+    a{color:inherit}
+
+    /* Layout */
+    header.nav{
+      position:sticky; top:0; z-index:20; backdrop-filter:saturate(180%) blur(10px);
+      background:rgba(255,255,255,.75); border-bottom:1px solid #e5e7eb;
+    }
+    .nav-inner{max-width:1100px; margin:0 auto; padding:14px 16px; display:flex; align-items:center; justify-content:space-between}
+    .brand{font-weight:900; font-size:20px; letter-spacing:.2px; color:var(--charcoal)}
+    .brand em{color:var(--sage); font-style:normal}
+
+    /* Tabs (CSS-only) */
+    .tabs{display:flex; gap:8px; align-items:center}
+    .tab{appearance:none; border:1px solid #e5e7eb; background:#fff; color:#111827; padding:10px 14px; border-radius:999px; cursor:pointer; font-weight:600; font-size:14px}
+    .tab:hover{background:#f9fafb}
+    input[type="radio"]{position:absolute; opacity:0; pointer-events:none}
+
+    main{max-width:1100px; margin:0 auto; padding:24px 16px 72px}
+
+    /* Views controlled by radio inputs */
+    .view{display:none}
+    #tab-browse:checked ~ main [data-view="browse"],
+    #tab-create:checked ~ main [data-view="create"],
+    #tab-bookings:checked ~ main [data-view="bookings"]{display:block}
+
+    /* Active tab styling */
+    #tab-browse:checked ~ header .tabs label[for="tab-browse"],
+    #tab-create:checked ~ header .tabs label[for="tab-create"],
+    #tab-bookings:checked ~ header .tabs label[for="tab-bookings"]{
+      background:var(--sage); color:#0b3a2f; border-color:transparent; box-shadow:var(--ring);
+    }
+
+    /* Section headers */
+    .h1{font-size:clamp(28px,3.5vw,40px); font-weight:900; letter-spacing:-.02em; color:var(--charcoal)}
+    .muted{color:var(--muted)}
+
+    /* Filters row */
+    .filters{display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:18px}
+    .chip{padding:8px 12px; border-radius:999px; border:1px solid #e5e7eb; background:#fff; font-weight:600; font-size:14px; cursor:pointer}
+    .chip:hover{background:#f3f4f6}
+
+    .search{position:relative}
+    .search input{padding:12px 14px 12px 42px; border:1px solid #e5e7eb; border-radius:999px; width:100%; max-width:320px; background:#fff}
+    .search svg{position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#9ca3af}
+
+    /* Cards grid */
+    .grid{display:grid; grid-template-columns:repeat(1,minmax(0,1fr)); gap:16px}
+    @media(min-width:640px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(min-width:1024px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+    .card{background:#fff; border:1px solid #e5e7eb; border-radius:var(--radius); overflow:hidden; box-shadow:0 6px 18px rgba(17,24,39,.04); display:flex; flex-direction:column}
+    .card .media{position:relative; height:180px; background:#e5e7eb}
+    .card .media img{width:100%; height:100%; object-fit:cover; display:block}
+    .card .badges{position:absolute; inset:auto 10px 10px 10px; display:flex; justify-content:space-between; align-items:flex-end; gap:8px}
+    .pill{background:rgba(0,0,0,.7); color:#fff; padding:6px 10px; border-radius:999px; font-size:12px; font-weight:700}
+    .title{font-weight:800}
+    .card .body{padding:14px}
+    .row{display:flex; align-items:center; justify-content:space-between; gap:10px}
+    .tags{display:flex; flex-wrap:wrap; gap:8px; margin-top:6px}
+    .tag{background:#f3f4f6; color:#374151; padding:6px 10px; border-radius:999px; font-size:12px; font-weight:700}
+    .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; border:1px solid #e5e7eb; background:#111827; color:#fff; padding:10px 12px; border-radius:10px; font-weight:700; cursor:pointer}
+    .btn.alt{background:#fff; color:#111827}
+    .btn.block{width:100%}
+    .btn:hover{filter:brightness(1.02)}
+
+    /* Slider */
+    .range{display:flex; align-items:center; gap:10px}
+    .range input{accent-color:var(--sage)}
+
+    /* Detail overlay & modal (CSS :target) */
+    .overlay, .modal{position:fixed; inset:0; background:rgba(0,0,0,.5); display:none; place-items:center; padding:20px}
+    .overlay:target, .modal:target{display:grid}
+    .panel{background:#fff; width:min(100%, 950px); max-height:90vh; overflow:auto; border-radius:20px; box-shadow:0 24px 80px rgba(0,0,0,.25)}
+    .panel .hero{position:relative; height:240px; background:#e5e7eb; border-radius:20px 20px 0 0; overflow:hidden}
+    .panel .hero img{width:100%; height:100%; object-fit:cover}
+    .panel .content{padding:18px}
+    .close{position:absolute; top:14px; right:14px; background:#fff; border:1px solid #e5e7eb; border-radius:999px; padding:8px 10px; font-weight:800; text-decoration:none; color:#111827}
+
+    .two-col{display:grid; grid-template-columns:1fr; gap:16px}
+    @media(min-width:900px){.two-col{grid-template-columns:2fr 1fr}}
+
+    .service{display:flex; align-items:center; justify-content:space-between; gap:12px; border:1px solid #e5e7eb; border-radius:12px; padding:12px}
+
+    /* Forms */
+    form{display:grid; gap:12px}
+    .field{display:grid; gap:6px}
+    .field label{font-weight:700; font-size:14px}
+    .input, select, textarea{width:100%; border:1px solid #e5e7eb; border-radius:10px; padding:12px; background:#fff}
+    textarea{min-height:110px}
+
+    .upload{border:2px dashed #d1d5db; border-radius:14px; padding:18px; background:#fff}
+    .upload label{display:inline-block; font-weight:800; background:var(--sage); color:#0b3a2f; padding:10px 12px; border-radius:10px; cursor:pointer}
+    .upload input{display:none}
+
+    .empty{border:1px dashed #d1d5db; border-radius:16px; padding:24px; text-align:center; color:#6b7280; background:rgba(147,197,180,.08)}
+
+    footer{border-top:1px solid #e5e7eb; background:rgba(255,255,255,.7); backdrop-filter:blur(8px)}
+    .footer-inner{max-width:1100px; margin:0 auto; padding:24px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
+  </style>
+</head>
+<body>
+
+  <!-- Hidden anchor to close any :target overlay -->
+  <a id="close" aria-hidden="true"></a>
+
+  <!-- RADIO CONTROLS (CSS-only tabs) -->
+  <input type="radio" name="tab" id="tab-browse" checked>
+  <input type="radio" name="tab" id="tab-create">
+  <input type="radio" name="tab" id="tab-bookings">
+
+  <!-- NAVBAR -->
+  <header class="nav">
+    <div class="nav-inner">
+      <div class="brand">UBU <em>Lite</em></div>
+      <div class="tabs" role="tablist" aria-label="Primary">
+        <label class="tab" role="tab" for="tab-browse" aria-controls="view-browse">Browse Creatives</label>
+        <label class="tab" role="tab" for="tab-create" aria-controls="view-create">For Creatives</label>
+        <label class="tab" role="tab" for="tab-bookings" aria-controls="view-bookings">My Bookings</label>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main>
+    <!-- BROWSE VIEW -->
+    <section id="view-browse" class="view" data-view="browse">
+      <h1 class="h1">Find & Book Creatives</h1>
+      <p class="muted">Search artists, designers, musicians, and more. Book securely in a few clicks.</p>
+
+      <div class="filters">
+        <div class="search" role="search">
+          <!-- Icon -->
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/></svg>
+          <input class="input" placeholder="Search by name, skill, style…" aria-label="Search" />
+        </div>
+        <button class="chip" type="button">All</button>
+        <button class="chip" type="button">Art</button>
+        <button class="chip" type="button">Music</button>
+        <button class="chip" type="button">Design</button>
+        <button class="chip" type="button">Photo/Video</button>
+        <div class="range" aria-label="Price filter">
+          <small class="muted">Max rate</small>
+          <input type="range" min="50" max="1000" value="600">
+        </div>
+      </div>
+
+      <div class="grid" style="margin-top:18px">
+        <!-- CARD 1 -->
+        <article class="card">
+          <div class="media">
+            <img src="https://images.unsplash.com/photo-1549880338-65ddcdfd017b?q=80&w=1200&auto=format&fit=crop" alt="Painting on wood" />
+            <div class="badges">
+              <span class="pill">Shay Chenette</span>
+              <span class="pill" aria-label="Rating">★ 4.9</span>
+            </div>
+          </div>
+          <div class="body">
+            <div class="row"><span class="title">Painter & Body Artist</span><small class="muted">Nashville, TN</small></div>
+            <div class="tags">
+              <span class="tag">Wood painting</span>
+              <span class="tag">Live painting</span>
+              <span class="tag">Body art</span>
+            </div>
+            <div class="row" style="margin-top:10px"><small class="muted">From</small><strong>$250</strong></div>
+            <div style="margin-top:12px" class="row">
+              <a class="btn block" href="#profile-shay" aria-label="View profile">View Profile</a>
+            </div>
+          </div>
+        </article>
+
+        <!-- CARD 2 -->
+        <article class="card">
+          <div class="media">
+            <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=1200&auto=format&fit=crop" alt="Product styling" />
+            <div class="badges">
+              <span class="pill">Yaaa EJ</span>
+              <span class="pill">★ 4.7</span>
+            </div>
+          </div>
+          <div class="body">
+            <div class="row"><span class="title">Fashion Creator & Stylist</span><small class="muted">London, UK</small></div>
+            <div class="tags">
+              <span class="tag">Lookbooks</span>
+              <span class="tag">Product styling</span>
+            </div>
+            <div class="row" style="margin-top:10px"><small class="muted">From</small><strong>€180 / hr</strong></div>
+            <div style="margin-top:12px" class="row">
+              <a class="btn block" href="#profile-yaaa" aria-label="View profile">View Profile</a>
+            </div>
+          </div>
+        </article>
+
+        <!-- CARD 3 -->
+        <article class="card">
+          <div class="media">
+            <img src="https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=1200&auto=format&fit=crop" alt="Studio with instruments" />
+            <div class="badges">
+              <span class="pill">Nova Beats</span>
+              <span class="pill">★ 4.8</span>
+            </div>
+          </div>
+          <div class="body">
+            <div class="row"><span class="title">Sound Healer & Producer</span><small class="muted">Accra, GH</small></div>
+            <div class="tags">
+              <span class="tag">Sound bowls</span>
+              <span class="tag">Ambient scoring</span>
+            </div>
+            <div class="row" style="margin-top:10px"><small class="muted">From</small><strong>₵1500 / session</strong></div>
+            <div style="margin-top:12px" class="row">
+              <a class="btn block" href="#profile-nova" aria-label="View profile">View Profile</a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- CREATE PROFILE VIEW -->
+    <section id="view-create" class="view" data-view="create">
+      <h1 class="h1">Create Your Profile</h1>
+      <p class="muted">Show who you are, upload a portfolio, and set your rates. (This demo is HTML/CSS only.)</p>
+
+      <form action="#" aria-label="Create profile form" style="margin-top:16px">
+        <div class="two-col">
+          <div>
+            <div class="field"><label for="name">Full Name</label><input class="input" id="name" placeholder="Jane Creative" required></div>
+            <div class="field"><label for="title">Headline / Role</label><input class="input" id="title" placeholder="Painter • Designer" required></div>
+            <div class="field"><label for="location">Location</label><input class="input" id="location" placeholder="Accra, GH"></div>
+            <div class="field"><label for="bio">Short Bio</label><textarea id="bio" placeholder="Tell clients about your style, values, and experience…"></textarea></div>
+
+            <div class="upload" style="margin-top:6px">
+              <p style="margin:0 0 8px 0"><strong>Avatar</strong> (JPG/PNG)</p>
+              <label for="avatar">Upload avatar</label>
+              <input type="file" id="avatar" accept="image/*">
+            </div>
+
+            <div class="upload" style="margin-top:12px">
+              <p style="margin:0 0 8px 0"><strong>Portfolio</strong> (up to 8 images)</p>
+              <label for="folio">Upload images</label>
+              <input type="file" id="folio" accept="image/*" multiple>
+            </div>
+          </div>
+          <div>
+            <div class="field"><label for="category">Category</label>
+              <select id="category">
+                <option>Art</option>
+                <option>Music</option>
+                <option>Design</option>
+                <option>Photo / Video</option>
+                <option>Business</option>
+              </select>
+            </div>
+            <div class="field"><label for="skills">Key Skills / Tags</label><input class="input" id="skills" placeholder="e.g., live painting, portraits, neon, boho"></div>
+
+            <fieldset class="upload" style="margin-top:6px">
+              <legend style="font-weight:800; padding:0 6px">Services & Rates</legend>
+              <div class="field"><label for="svc1">Service 1</label><input class="input" id="svc1" placeholder="Live Painting (2 hrs)"></div>
+              <div class="field"><label for="rate1">Rate</label><input class="input" id="rate1" placeholder="$250"></div>
+              <hr style="border:none; border-top:1px solid #e5e7eb; margin:10px 0" />
+              <div class="field"><label for="svc2">Service 2</label><input class="input" id="svc2" placeholder="Custom Portrait"></div>
+              <div class="field"><label for="rate2">Rate</label><input class="input" id="rate2" placeholder="$300"></div>
+              <p class="muted" style="margin:8px 0 0">(Add more later — kept simple for HTML/CSS demo.)</p>
+            </fieldset>
+
+            <div class="row" style="margin-top:14px">
+              <button class="btn" type="submit">Save Profile</button>
+              <button class="btn alt" type="reset">Reset</button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- BOOKINGS VIEW -->
+    <section id="view-bookings" class="view" data-view="bookings">
+      <h1 class="h1">My Bookings</h1>
+      <p class="muted">When you submit a booking form, it would appear here (with JavaScript/Backend). For now, this is a visual demo.</p>
+      <div class="empty" style="margin-top:16px">
+        <p><strong>No bookings yet.</strong></p>
+        <p class="muted">Browse a creative profile and tap <em>Book Now</em> to try the form overlay.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- PROFILE OVERLAYS (CSS :target) -->
+  <section id="profile-shay" class="overlay" aria-modal="true" role="dialog" aria-labelledby="shay-title">
+    <article class="panel">
+      <a href="#close" class="close" aria-label="Close">✕</a>
+      <div class="hero"><img src="https://images.unsplash.com/photo-1549880338-65ddcdfd017b?q=80&w=1200&auto=format&fit=crop" alt="Shay portfolio hero"></div>
+      <div class="content">
+        <div class="two-col">
+          <div>
+            <h2 id="shay-title" class="h1" style="font-size:28px">Shay Chenette</h2>
+            <p class="muted">Painter & Body Artist • Nashville, TN</p>
+            <p style="margin-top:8px">Bold color, calm energy. I paint live at events and create custom wood‑panel pieces.</p>
+            <h3>Portfolio</h3>
+            <div class="grid" style="grid-template-columns:repeat(3,1fr); gap:10px">
+              <img src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?q=80&w=1200&auto=format&fit=crop" alt="Piece 1" style="height:110px; object-fit:cover; width:100%; border-radius:10px">
+              <img src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?q=80&w=1200&auto=format&fit=crop" alt="Piece 2" style="height:110px; object-fit:cover; width:100%; border-radius:10px">
+              <img src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?q=80&w=1200&auto=format&fit=crop" alt="Piece 3" style="height:110px; object-fit:cover; width:100%; border-radius:10px">
+            </div>
+          </div>
+          <aside>
+            <h3>Services & Rates</h3>
+            <div class="service"><div><strong>Live Painting (2 hrs)</strong><div class="muted" style="font-size:12px">per session</div></div><div><strong>$250</strong></div></div>
+            <div class="service"><div><strong>Custom Portrait</strong><div class="muted" style="font-size:12px">per piece</div></div><div><strong>$300</strong></div></div>
+            <a class="btn block" href="#book-shay">Book Now</a>
+          </aside>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <section id="profile-yaaa" class="overlay" role="dialog" aria-labelledby="yaaa-title">
+    <article class="panel">
+      <a href="#close" class="close" aria-label="Close">✕</a>
+      <div class="hero"><img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=1200&auto=format&fit=crop" alt="Yaaa portfolio hero"></div>
+      <div class="content two-col">
+        <div>
+          <h2 id="yaaa-title" class="h1" style="font-size:28px">Yaaa EJ</h2>
+          <p class="muted">Fashion Creator & Stylist • London, UK</p>
+          <p style="margin-top:8px">Clean lines, earth tones, and wearable art.</p>
+        </div>
+        <aside>
+          <h3>Services & Rates</h3>
+          <div class="service"><div><strong>Lookbook Styling</strong><div class="muted" style="font-size:12px">per hour</div></div><div><strong>€180</strong></div></div>
+          <div class="service"><div><strong>E‑com Product Styling</strong><div class="muted" style="font-size:12px">per day</div></div><div><strong>€500</strong></div></div>
+          <a class="btn block" href="#book-yaaa">Book Now</a>
+        </aside>
+      </div>
+    </article>
+  </section>
+
+  <section id="profile-nova" class="overlay" role="dialog" aria-labelledby="nova-title">
+    <article class="panel">
+      <a href="#close" class="close" aria-label="Close">✕</a>
+      <div class="hero"><img src="https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=1200&auto=format&fit=crop" alt="Nova portfolio hero"></div>
+      <div class="content two-col">
+        <div>
+          <h2 id="nova-title" class="h1" style="font-size:28px">Nova Beats</h2>
+          <p class="muted">Sound Healer & Producer • Accra, GH</p>
+          <p style="margin-top:8px">Textured frequencies for meditative spaces and live experiences.</p>
+        </div>
+        <aside>
+          <h3>Services & Rates</h3>
+          <div class="service"><div><strong>Sound Bath (60m)</strong><div class="muted" style="font-size:12px">per session</div></div><div><strong>₵1500</strong></div></div>
+          <div class="service"><div><strong>Custom Track</strong><div class="muted" style="font-size:12px">per track</div></div><div><strong>₵4000</strong></div></div>
+          <a class="btn block" href="#book-nova">Book Now</a>
+        </aside>
+      </div>
+    </article>
+  </section>
+
+  <!-- BOOKING MODALS (CSS :target) -->
+  <section id="book-shay" class="modal" role="dialog" aria-labelledby="book-shay-title">
+    <article class="panel" style="max-width:720px">
+      <a href="#close" class="close" aria-label="Close">✕</a>
+      <div class="content">
+        <h2 id="book-shay-title" class="h1" style="font-size:26px">Book Shay Chenette</h2>
+        <form action="#booking-success">
+          <div class="two-col">
+            <div>
+              <div class="field"><label for="shay-svc">Service</label>
+                <select id="shay-svc" required>
+                  <option value="Live Painting">Live Painting (2 hrs) — $250</option>
+                  <option value="Custom Portrait">Custom Portrait — $300</option>
+                </select>
+              </div>
+              <div class="field"><label for="shay-date">Date</label><input class="input" id="shay-date" type="date" required></div>
+              <div class="field"><label for="shay-time">Time</label><input class="input" id="shay-time" type="time" required></div>
+            </div>
+            <div>
+              <div class="field"><label for="shay-name">Your Name</label><input class="input" id="shay-name" placeholder="Jane Doe" required></div>
+              <div class="field"><label for="shay-email">Email</label><input class="input" id="shay-email" type="email" placeholder="jane@site.com" required></div>
+              <div class="field"><label for="shay-notes">Notes</label><textarea id="shay-notes" placeholder="Event details, vibe, references…"></textarea></div>
+            </div>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <button class="btn" type="submit">Submit Request</button>
+            <a class="btn alt" href="#close">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </article>
+  </section>
+
+  <!-- Minimal JS demo: register/login and create order using API -->
+  <script>
+    // NOTE: This is a tiny demo helper for local development only.
+    const API_BASE = '/api';
+
+    async function apiPost(path, body, token){
+      const headers = {'Content-Type':'application/json'};
+      if(token) headers['Authorization'] = `Bearer ${token}`;
+      const resp = await fetch(API_BASE + path, {method:'POST', headers, body: JSON.stringify(body)});
+      return resp.json();
+    }
+
+    // Demo flow triggered by console for now
+    window.demoRegisterAndBook = async function(){
+      try{
+        console.log('Registering demo user...');
+        await apiPost('/auth/register/', {username:'demo_buyer', password:'DemoPass123!', role:'client', email:'demo@local'});
+      } catch(e){ console.warn('Register may have failed or user exists', e); }
+
+      console.log('Logging in...');
+      const tokenResp = await apiPost('/auth/login/', {username:'demo_buyer', password:'DemoPass123!'});
+      const token = tokenResp && tokenResp.access;
+      if(!token){ console.error('Login failed', tokenResp); return; }
+
+      console.log('Fetching services...');
+      const services = await fetch(API_BASE + '/services/').then(r=>r.json());
+      if(!services.length) { console.warn('No services found to book'); return; }
+      const svc = services[0];
+
+      console.log('Creating order for service', svc.id);
+      const order = await apiPost('/orders/', {service: svc.id, instructions: 'Demo order via homepage'}, token);
+      console.log('Order created', order);
+      alert('Demo order created. Check admin or /api/orders/');
+    }
+
+    // Demo checkout: call server to create Stripe PaymentIntent for first order
+    window.demoCheckout = async function(){
+      const tokenResp = await apiPost('/auth/login/', {username:'demo_buyer', password:'DemoPass123!'});
+      const token = tokenResp && tokenResp.access;
+      if(!token){ console.error('Login failed'); return; }
+      const orders = await fetch(API_BASE + '/orders/', {headers:{'Authorization': 'Bearer ' + token}}).then(r=>r.json());
+      if(!orders.length){ alert('No orders found to checkout. Run demoRegisterAndBook first.'); return; }
+      const order = orders[0];
+      const resp = await apiPost('/payments/create-intent/', {order: order.id}, token);
+      console.log('PaymentIntent client_secret:', resp.client_secret);
+      alert('PaymentIntent created (client_secret logged to console)');
+    }
+  </script>
+
+  <!-- Stripe Checkout Demo (loads Stripe.js dynamically) -->
+  <script>
+    async function loadStripeJs(){
+      if(window.Stripe) return window.Stripe;
+      const s = document.createElement('script');
+      s.src = 'https://js.stripe.com/v3/';
+      document.head.appendChild(s);
+      return new Promise(resolve => { s.onload = () => resolve(window.Stripe); });
+    }
+
+    // Show a simple card modal (uses Stripe Elements)
+    async function showCardModalAndPay(orderId){
+      const stripeModule = await loadStripeJs();
+      const keyResp = await fetch('/api/payments/publishable-key/').then(r=>r.json());
+      const publishableKey = keyResp.publishableKey;
+      if(!publishableKey){ alert('Publishable key not configured. Set STRIPE_PUBLISHABLE_KEY in env.'); return; }
+      const stripe = stripeModule(publishableKey);
+
+      // Create PaymentIntent on server
+      const tokenResp = await apiPost('/auth/login/', {username:'demo_buyer', password:'DemoPass123!'});
+      const token = tokenResp && tokenResp.access;
+      const piResp = await apiPost('/payments/create-intent/', {order: orderId}, token);
+      const clientSecret = piResp.client_secret;
+
+      // Create Elements
+      const elements = stripe.elements();
+      const card = elements.create('card');
+      const modal = document.createElement('div');
+      modal.style.position='fixed'; modal.style.inset='0'; modal.style.display='grid'; modal.style.placeItems='center'; modal.style.background='rgba(0,0,0,.5)';
+      modal.innerHTML = `<div style="background:#fff;padding:20px;border-radius:12px;max-width:420px;width:100%"><h3>Enter test card</h3><div id="card-element"></div><button id="pay-btn" class="btn" style="margin-top:12px">Pay</button><button id="close-btn" class="btn alt" style="margin-top:12px">Close</button></div>`;
+      document.body.appendChild(modal);
+      card.mount(modal.querySelector('#card-element'));
+
+      modal.querySelector('#close-btn').onclick = () => { modal.remove(); };
+      modal.querySelector('#pay-btn').onclick = async () => {
+        modal.querySelector('#pay-btn').disabled = true;
+        const {error, paymentIntent} = await stripe.confirmCardPayment(clientSecret, {payment_method: {card}});
+        if(error){ alert('Payment failed: ' + error.message); modal.querySelector('#pay-btn').disabled = false; return; }
+        alert('Payment succeeded: ' + paymentIntent.id);
+        modal.remove();
+      };
+    }
+
+    // Helper to create an order then open Stripe modal
+    window.demoCreateOrderAndCheckout = async function(){
+      // ensure demo order exists
+      await window.demoRegisterAndBook();
+      const tokenResp = await apiPost('/auth/login/', {username:'demo_buyer', password:'DemoPass123!'});
+      const token = tokenResp && tokenResp.access;
+      const orders = await fetch(API_BASE + '/orders/', {headers:{'Authorization':'Bearer ' + token}}).then(r=>r.json());
+      if(!orders.length){ alert('No order found'); return; }
+      const order = orders[0];
+      await showCardModalAndPay(order.id);
+    }
+  </script>
+  <section id="book-yaaa" class="modal" role="dialog" aria-labelledby="book-yaaa-title">
+    <article class="panel" style="max-width:720px">
+      <a href="#close" class="close" aria-label="Close">✕</a>
+      <div class="content">
+        <h2 id="book-yaaa-title" class="h1" style="font-size:26px">Book Yaaa EJ</h2>
+        <form action="#booking-success">
+          <div class="two-col">
+            <div>
+              <div class="field"><label for="yaaa-svc">Service</label>
+                <select id="yaaa-svc" required>
+                  <option>Lookbook Styling — €180/hr</option>
+                  <option>E‑com Product Styling — €500/day</option>
+                </select>
+              </div>
+              <div class="field"><label for="yaaa-date">Date</label><input class="input" id="yaaa-date" type="date" required></div>
+              <div class="field"><label for="yaaa-time">Time</label><input class="input" id="yaaa-time" type="time" required></div>
+            </div>
+            <div>
+              <div class="field"><label for="yaaa-name">Your Name</label><input class="input" id="yaaa-name" placeholder="Alex Client" required></div>
+              <div class="field"><label for="yaaa-email">Email</label><input class="input" id="yaaa-email" type="email" placeholder="alex@site.com" required></div>
+              <div class="field"><label for="yaaa-notes">Notes</label><textarea id="yaaa-notes" placeholder="Shoot concept, brand palette…"></textarea></div>
+            </div>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <button class="btn" type="submit">Submit Request</button>
+            <a class="btn alt" href="#close">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </article>
+  </section>
+
+  <section id="book-nova" class="modal" role="dialog" aria-labelledby="book-nova-title">
+    <article class="panel" style="max-width:720px">
+      <a href="#close" class="close" aria-label="Close">✕</a>
+      <div class="content">
+        <h2 id="book-nova-title" class="h1" style="font-size:26px">Book Nova Beats</h2>
+        <form action="#booking-success">
+          <div class="two-col">
+            <div>
+              <div class="field"><label for="nova-svc">Service</label>
+                <select id="nova-svc" required>
+                  <option>Sound Bath (60m) — ₵1500</option>
+                  <option>Custom Track — ₵4000</option>
+                </select>
+              </div>
+              <div class="field"><label for="nova-date">Date</label><input class="input" id="nova-date" type="date" required></div>
+              <div class="field"><label for="nova-time">Time</label><input class="input" id="nova-time" type="time" required></div>
+            </div>
+            <div>
+              <div class="field"><label for="nova-name">Your Name</label><input class="input" id="nova-name" placeholder="Ama Client" required></div>
+              <div class="field"><label for="nova-email">Email</label><input class="input" id="nova-email" type="email" placeholder="ama@site.com" required></div>
+              <div class="field"><label for="nova-notes">Notes</label><textarea id="nova-notes" placeholder="Venue, expected audience size…"></textarea></div>
+            </div>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <button class="btn" type="submit">Submit Request</button>
+            <a class="btn alt" href="#close">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </article>
+  </section>
+
+  <!-- Fake success: just scrolls to this anchor after form submit -->
+  <section id="booking-success" class="modal" role="alertdialog" aria-labelledby="success-title">
+    <article class="panel" style="max-width:560px">
+      <a href="#close" class="close" aria-label="Close">✕</a>
+      <div class="content" style="text-align:center">
+        <h2 id="success-title" class="h1" style="font-size:26px; margin-bottom:8px">Request Sent 🎉</h2>
+        <p class="muted">Thank you! The creative will review and get back to you via email. (In a real app, this would POST to your backend.)</p>
+        <div style="margin-top:16px"><a class="btn" href="#close">Back to site</a></div>
+      </div>
+    </article>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <small class="muted">Secure & client‑friendly booking • © <span id="year">2025</span> UBU Lite</small>
+      <small class="muted">Single‑file demo (HTML & CSS only)</small>
+    </div>
+  </footer>
+</body>
+</html>

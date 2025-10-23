@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login • UBU Lite</title>
+  <link rel="icon" type="image/png" href="/static/img/favicon.png">
+  <style>
+    body{font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin:0; background:#f7faf8}
+    .wrap{max-width:420px;margin:48px auto;background:#fff;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.06);padding:22px}
+    h1{margin:0 0 12px 0}
+    label{display:block;margin-top:12px;font-weight:600}
+    input{width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;margin-top:6px}
+    .btn{margin-top:16px;display:inline-block;background:#0b3a2f;color:#fff;border:none;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:700}
+    .muted{color:#6b7280;font-size:14px;margin-top:8px}
+    .error{color:#c0392b;margin-top:8px}
+  </style>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script>
+    async function login(ev){
+      ev.preventDefault();
+      const username = document.getElementById('u').value.trim();
+      const password = document.getElementById('p').value;
+      const out = document.getElementById('out'); out.textContent='';
+      try{
+        const r = await fetch('/api/auth/login/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});
+        const j = await r.json();
+        if(!r.ok || !j.access){ throw new Error(j.detail||'Login failed'); }
+        localStorage.setItem('ubu_auth_token', j.access);
+        localStorage.setItem('ubu_auth_user', JSON.stringify(j.user || {username}));
+        location.href = '/react-app/';
+      }catch(e){ out.textContent = e.message; }
+    }
+    function handleGoogle(resp){
+      const token = resp.credential;
+      fetch('/api/auth/google/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({credential:token})})
+        .then(r=>r.json().then(j=>({ok:r.ok,j})))
+        .then(({ok,j})=>{
+          if(!ok || !j.access){ throw new Error(j.detail||'Google login failed'); }
+          localStorage.setItem('ubu_auth_token', j.access);
+          localStorage.setItem('ubu_auth_user', JSON.stringify(j.user));
+          location.href='/react-app/';
+        })
+        .catch(e=>{ document.getElementById('out').textContent=e.message });
+    }
+  </script>
+  </head>
+<body>
+  <div class="wrap">
+    <h1>Sign in</h1>
+    <form onsubmit="login(event)">
+      <label>Username
+        <input id="u" placeholder="yourname" required />
+      </label>
+      <label>Password
+        <input id="p" type="password" placeholder="••••••••" required />
+      </label>
+      <button class="btn">Login</button>
+      <div style="margin-top:12px">
+        <div id="g_id_onload"
+             data-client_id="${GOOGLE_CLIENT_ID}"
+             data-context="signin"
+             data-ux_mode="popup"
+             data-callback="handleGoogle"></div>
+        <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="outline" data-text="signin_with" data-size="large" data-logo_alignment="left"></div>
+      </div>
+      <div id="out" class="error"></div>
+      <div class="muted">No account? <a href="/register/">Register</a></div>
+    </form>
+  </div>
+</body>
+</html>

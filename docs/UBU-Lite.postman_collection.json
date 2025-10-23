@@ -1,0 +1,81 @@
+{
+  "info": {
+    "name": "UBU Lite API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "6e8b5a6a-7f2f-4a79-9b7c-ubu-lite"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8000" },
+    { "key": "accessToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth / Login (JWT)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{baseUrl}}/api/auth/login/", "host": ["{{baseUrl}}"], "path": ["api","auth","login",""] },
+        "body": { "mode": "raw", "raw": "{\n  \"username\": \"demo_client\",\n  \"password\": \"demo12345\"\n}" }
+      }
+    },
+    {
+      "name": "Auth / Register",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{baseUrl}}/api/auth/register/", "host": ["{{baseUrl}}"], "path": ["api","auth","register",""] },
+        "body": { "mode": "raw", "raw": "{\n  \"username\": \"new_user\",\n  \"password\": \"change_me\",\n  \"role\": \"client\"\n}" }
+      }
+    },
+    {
+      "name": "Creatives / List",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/api/creatives/", "host": ["{{baseUrl}}"], "path": ["api","creatives",""] }
+      }
+    },
+    {
+      "name": "Services / List",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/api/services/", "host": ["{{baseUrl}}"], "path": ["api","services",""] }
+      }
+    },
+    {
+      "name": "Orders / Create",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+        ],
+        "url": { "raw": "{{baseUrl}}/api/orders/", "host": ["{{baseUrl}}"], "path": ["api","orders",""] },
+        "body": { "mode": "raw", "raw": "{\n  \"service\": 1,\n  \"instructions\": \"Do great work\"\n}" }
+      }
+    },
+    {
+      "name": "Escrows / Creative Fulfill",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{accessToken}}" } ],
+        "url": { "raw": "{{baseUrl}}/api/escrows/1/creative_fulfill/", "host": ["{{baseUrl}}"], "path": ["api","escrows","1","creative_fulfill",""] }
+      }
+    },
+    {
+      "name": "Escrows / Client Fulfill",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{accessToken}}" } ],
+        "url": { "raw": "{{baseUrl}}/api/escrows/1/client_fulfill/", "host": ["{{baseUrl}}"], "path": ["api","escrows","1","client_fulfill",""] }
+      }
+    },
+    {
+      "name": "Wallet / Get",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{accessToken}}" } ],
+        "url": { "raw": "{{baseUrl}}/api/wallet/", "host": ["{{baseUrl}}"], "path": ["api","wallet",""] }
+      }
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>UBU Lite — Booking creatives near you</title>
+  <link rel="icon" type="image/png" href="/static/img/favicon.png">
+  <style>
+    :root{ --bg:#fafaf9; --muted:#6b7280; --brand:#0b3a2f; --accent:#93C5B4; --card:#fff }
+    html,body{height:100%; margin:0; font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial}
+    body{background:linear-gradient(180deg,#f8faf7 0%,#fff 50%); color:#0f172a}
+    .wrap{max-width:1100px; margin:0 auto; padding:28px}
+    header{display:flex; align-items:center; justify-content:space-between}
+    .brand{font-weight:900; font-size:20px; color:var(--brand)}
+    .brand em{color:var(--accent); font-style:normal}
+    nav{display:flex; gap:12px}
+    nav a{color:var(--muted); text-decoration:none; font-weight:700}
+
+    .hero{display:grid; grid-template-columns:1fr; gap:18px; align-items:center; margin-top:36px}
+    @media(min-width:900px){.hero{grid-template-columns:1fr 420px}}
+    .hero-card{background:var(--card); border-radius:16px; padding:28px; box-shadow:0 8px 30px rgba(2,6,23,.06)}
+    .headline{font-size:clamp(28px,4vw,44px); font-weight:900; color:var(--brand); margin:0}
+    .sub{color:var(--muted); margin-top:8px}
+    .cta{margin-top:18px; display:flex; gap:12px}
+    .btn{background:var(--brand); color:#fff; padding:12px 18px; border-radius:12px; font-weight:800; text-decoration:none}
+    .btn.alt{background:#fff; color:var(--brand); border:2px solid rgba(11,58,47,.06)}
+
+    .features{display:grid; gap:12px; margin-top:18px}
+    .feature{display:flex; gap:12px; align-items:flex-start}
+    .dot{width:44px;height:44px;border-radius:10px;background:linear-gradient(180deg,#e6f7f0,#dff3ec);display:grid;place-items:center}
+
+    footer{margin-top:40px; border-top:1px solid #eef2e6; padding:18px 0;color:var(--muted); display:flex; justify-content:space-between; align-items:center}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">UBU <em>Lite</em></div>
+      <nav>
+        <a href="/react-app/">App</a>
+        <a href="/front-end/">Frontends</a>
+        <a href="/admin/">Admin</a>
+        <a href="/login/">Login</a>\n        <a href="/register/">Register</a>\n      </nav>
+    </header>
+
+    <section class="hero">
+      <div class="hero-card">
+        <h1 class="headline">Book trusted creatives — locally or remotely</h1>
+        <p class="sub">Discover photographers, designers, musicians and other makers. Browse portfolios, chat, and book with a simple, secure flow.</p>
+        <div class="cta">
+          <a class="btn" href="/react-app/">Open App</a>
+          <a class="btn alt" href="/front-end/">See front-end demos</a>
+        </div>
+
+        <div class="features">
+          <div class="feature"><div class="dot">✓</div><div><strong>Profiles & portfolios</strong><div class="sub">Rich, visual profiles for creatives.</div></div></div>
+          <div class="feature"><div class="dot">⚡</div><div><strong>Instant booking</strong><div class="sub">Schedule and confirm in a few clicks.</div></div></div>
+          <div class="feature"><div class="dot">🔒</div><div><strong>Secure payments</strong><div class="sub">Stripe integration for safe transactions (demo).</div></div></div>
+        </div>
+      </div>
+
+      <aside style="align-self:center">
+        <div style="background:linear-gradient(180deg,#fff,#f6fffb); border-radius:16px; padding:18px; box-shadow:0 6px 22px rgba(3,7,18,.05)">
+          <h3 style="margin:0 0 8px 0">Featured creative</h3>
+          <img src="https://images.unsplash.com/photo-1549880338-65ddcdfd017b?q=80&w=800&auto=format&fit=crop" alt="featured" style="width:100%; border-radius:10px; display:block; height:160px; object-fit:cover">
+          <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center">
+            <div><strong>Shay Chenette</strong><div style="color:var(--muted); font-size:13px">Painter • Nashville</div></div>
+            <a class="btn" href="#">View</a>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <footer>
+      <div>© BankrahStudios — UBU Lite</div>
+      <div><small>Built with Django & DRF — demo only</small></div>
+    </footer>
+  </div>
+</body>
+</html>

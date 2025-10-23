@@ -107,6 +107,83 @@ Clone the repository:
 ```bash
 git clone https://github.com/BankrahStudios/Ubu-Lite.git
 cd Ubu-Lite
-Set up a virtual environment.
+set up a virtual environment.
 Run migrations, and
 Start the development server
+
+---
+
+Serving the React homepage from Django
+-------------------------------------
+
+This project includes a React TypeScript homepage scaffold under `templates/ubu-lite-homepage`.
+To build and serve the React app from Django (so you don't need a separate dev server):
+
+1. Build the React app (this creates `build/` inside `templates/ubu-lite-homepage`):
+
+```bash
+cd templates/ubu-lite-homepage
+npm install
+npm run build
+```
+
+2. (Optional) Collect static files into `staticfiles/` so Django can serve them via `STATIC_ROOT`:
+
+```bash
+python manage.py collectstatic --noinput
+```
+
+3. Open the built app served by Django at:
+
+```
+http://localhost:8000/react-app/
+```
+
+If the build directory is missing, Django will fall back to a simple informational page at `/react/`.
+
+---
+
+Quick demo data and flows
+-------------------------
+
+This project includes management commands to quickly simulate end‑to‑end flows without external services:
+
+- Seed + simulate escrow lifecycle:
+
+  ```bash
+  python manage.py simulate_escrow
+  ```
+
+  Creates demo users `demo_client` and `demo_creative` (password `demo12345`), a service, an order, simulates a payment, and releases escrow after dual fulfillment. Prints wallet balances and JWT tokens for quick API testing.
+
+- API walkthrough using real API endpoints (JWT auth, create order, fund escrow, fulfill):
+
+  ```bash
+  python manage.py api_walkthrough
+  ```
+
+  Uses DRF’s test client with JWT to hit `/api/...` routes and prints the results. You can copy the printed `Authorization: Bearer <token>` to test endpoints via curl or Postman.
+
+- Seed multiple creatives and services for richer UI testing:
+
+  ```bash
+  python manage.py seed_demo
+  ```
+
+  Creates several creative users (password `demo12345`), profiles and services across categories like Art, Music, Design, Photography, and Video.
+
+Admin and server
+----------------
+
+- Create a superuser and launch the server:
+
+  ```bash
+  python manage.py createsuperuser
+  python manage.py runserver
+  ```
+
+- Useful URLs:
+  - `/` React SPA (served from `templates/ubu-lite-homepage/build`)
+  - `/api/` core API (JWT protected; many endpoints allow anonymous reads)
+  - `/admin/` Django admin
+  - `/login/` and `/register/` templates (receive `GOOGLE_CLIENT_ID` if set in `.env`)

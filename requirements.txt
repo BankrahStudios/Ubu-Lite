@@ -1,3 +1,7 @@
 Django>=4.2
 djangorestframework
 djangorestframework-simplejwt
+stripe
+django-cors-headers
+google-auth
+python-dotenv
