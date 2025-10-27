@@ -1,0 +1,12 @@
+# Local ignores for frontend app
+
+# Dependencies
+node_modules/
+
+# Build artifacts (keep build/index.html tracked)
+build/static/
+
+# Caches
+.cache/
+.eslintcache
+
