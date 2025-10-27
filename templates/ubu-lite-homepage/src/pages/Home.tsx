@@ -11,7 +11,6 @@ const NAV_LINKS = [
   { label: 'Categories', href: '#categories' },
   { label: 'Top talent', href: '#talent' },
   { label: 'FAQ', href: '/faq' },
-  { label: 'Book a call', href: '/book' },
   { label: 'Studio', href: '/studio' },
   { label: 'Wallet', href: '/wallet' },
   { label: 'Escrows', href: '/escrows' },
@@ -58,6 +57,15 @@ const Home: React.FC = () => {
   const [location, setLocation] = useState('');
   const [category, setCategory] = useState('');
   const [remoteCreatives, setRemoteCreatives] = useState<any[] | null>(null);
+  const featuredProfileId = useMemo(() => {
+    try {
+      return Array.isArray(remoteCreatives) && remoteCreatives.length
+        ? (remoteCreatives[0]?.id as number)
+        : 1;
+    } catch {
+      return 1;
+    }
+  }, [remoteCreatives]);
 
   useEffect(() => {
     api
@@ -183,7 +191,6 @@ const Home: React.FC = () => {
 
               <motion.div custom={2} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="mt-6 flex flex-wrap gap-3">
                 <a href="#talent" className="btn pill bg-[var(--orange-600)] hover:bg-[var(--orange-700)] text-white px-5 py-3 font-semibold shadow-sm">Open App</a>
-                <a href="/front-end/#react-app" className="btn pill bg-white px-5 py-3 font-semibold border border-[color:var(--border)] shadow-sm">See front-end demos</a>
               </motion.div>
 
               <div className={`mt-7 rounded-2xl border border-[color:var(--border)] bg-[var(--card)] p-5 card ${dark ? 'card-dark' : ''}`}>
@@ -241,7 +248,7 @@ const Home: React.FC = () => {
                 <div className="text-sm text-[var(--muted)]">Painter - Nashville</div>
               </div>
               <div className="mt-3">
-                <button className="btn pill px-5 py-2 bg-[var(--orange-600)] hover:bg-[var(--orange-700)] text-white font-semibold">View</button>
+                <a href={`/creatives/${featuredProfileId}`} className="btn pill px-5 py-2 bg-[var(--orange-600)] hover:bg-[var(--orange-700)] text-white font-semibold">View</a>
               </div>
             </motion.aside>
           </div>

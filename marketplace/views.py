@@ -76,6 +76,10 @@ def _make_ics(booking: Booking) -> bytes:
         uid = f"booking-{booking.pk}@ubulite"
         summary = f"UBU Lite • {booking.service.title}"
         desc = f"Meet: {booking.meet_url or 'TBA'}"
+        desc = (
+            desc
+            + "\\n\\nTerms: 33% platform fee applies; 67% of funds are escrowed and released to the creative after both parties confirm completion."
+        )
         ics = (
             "BEGIN:VCALENDAR\r\n"
             "VERSION:2.0\r\n"
@@ -189,6 +193,19 @@ class BookingViewSet(viewsets.ModelViewSet):
         serializer.save(client=self.request.user)
 
     def create(self, request, *args, **kwargs):
+        # Require client confirmation flags before creating a booking
+        def _truthy(v):
+            return v in (True, 1, "1", "true", "True", "on", "yes", "Yes")
+
+        if not _truthy(request.data.get("ready")) or not _truthy(request.data.get("accepts_fees")):
+            return Response(
+                {
+                    "detail": "Please confirm both readiness and the 33% fee / 67% escrow terms before booking.",
+                    "code": "precheck_required",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
             raise ValidationError(serializer.errors)
@@ -197,7 +214,10 @@ class BookingViewSet(viewsets.ModelViewSet):
         try:
             b = Booking.objects.select_related("service__creative_profile__user").get(pk=serializer.data["id"])
             subj = "New booking request"
-            msg = f"Booking #{b.pk} requested for service '{b.service.title}' on {b.date}."
+            msg = (
+                f"Booking #{b.pk} requested for service '{b.service.title}' on {b.date}.\n\n"
+                "Terms: 33% platform fee will be deducted from the total. The remaining 67% is held in escrow and released to the creative after both parties mark the job as completed."
+            )
             to = [b.service.creative_profile.user.email or ""]
             if to and to[0]:
                 send_mail(subj, msg, dj_settings.DEFAULT_FROM_EMAIL, to, fail_silently=True)
@@ -229,7 +249,13 @@ class BookingViewSet(viewsets.ModelViewSet):
                 to = [booking.client.email or ""]
                 if to and to[0]:
                     if booking.status == Booking.Status.APPROVED:
-                        email = EmailMessage(subj, msg, dj_settings.DEFAULT_FROM_EMAIL, to)
+                        email = EmailMessage(
+                            subj,
+                            msg
+                            + "\n\nTerms: 33% platform fee applies; 67% of funds are escrowed and released to the creative once both parties confirm completion.",
+                            dj_settings.DEFAULT_FROM_EMAIL,
+                            to,
+                        )
                         ics = _make_ics(booking)
                         if ics:
                             email.attach("booking.ics", ics, "text/calendar")

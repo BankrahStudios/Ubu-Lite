@@ -16,11 +16,12 @@ Including another URLconf
 """
 
 from pathlib import Path
+import os
 import mimetypes
 
 from django.contrib import admin
 from django.http import FileResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.urls import include, path, re_path
 from django.conf.urls.static import static
 from django.conf import settings
@@ -30,8 +31,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 def root_view(request):
-    # Render friendly landing page from templates/index.html
-    return render(request, "homepage.html")
+    # Configurable landing:
+    # - ROOT_LANDING=faq  -> redirect to FAQ
+    # - ROOT_LANDING=react -> serve React build (default previously)
+    # - ROOT_LANDING=home -> render templates/homepage.html
+    mode = getattr(settings, "ROOT_LANDING", os.environ.get("ROOT_LANDING", "faq")).lower()
+    if mode == "faq":
+        return redirect("faq")
+    if mode == "home":
+        return render(request, "homepage.html")
+    return react_app(request)
 
 
 def frontends_index(request):
@@ -74,8 +83,8 @@ def register_page(request):
 
 
 urlpatterns = [
-    # Serve the built React homepage by default so users don't need the dev server
-    path("", react_app),
+    # Redirect root to FAQ for quick access during testing
+    path("", root_view),
     # Route FAQ to the built React app as well (SPA routing)
     path("faq/", react_app, name="faq"),
     path("book/", react_app, name="book"),

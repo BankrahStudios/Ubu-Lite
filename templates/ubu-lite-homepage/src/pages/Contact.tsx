@@ -62,7 +62,7 @@ const Contact: React.FC = () => {
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <header className="border-b border-[color:var(--border)]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 flex items-center justify-between">
-          <a href="/" className="font-extrabold tracking-tight text-xl">
+          <a href="/react-app/" className="font-extrabold tracking-tight text-xl">
             UBU <span className="text-[var(--orange-600)]">Lite</span>
           </a>
           <nav className="flex items-center gap-4 text-sm">
@@ -112,10 +112,10 @@ const Contact: React.FC = () => {
                 hello@ubulite.com
               </a>
               <a
-                href="/book"
+                href="/creatives"
                 className="inline-block bg-[var(--accent-strong)] hover:bg-[var(--accent-deep)] text-white font-medium px-4 py-2 rounded-lg shadow-sm transition"
               >
-                Book a call →
+                Hire a creative →
               </a>
             </motion.div>
           </div>
@@ -160,7 +160,7 @@ const Contact: React.FC = () => {
           <div className="space-y-4 order-2 lg:order-1 lg:col-span-1">
             {[
               { title: 'Customer Support', byline: 'Help center and ticketing', cta: 'Visit Help Center', href: '/faq' },
-              { title: 'Enterprise', byline: 'Custom solutions for teams', cta: 'Talk to sales', href: '/book' },
+              { title: 'Enterprise', byline: 'Custom solutions for teams', cta: 'Hire a creative', href: '/creatives' },
               { title: 'Press', byline: 'Media and speaking', cta: 'press@ubulite.com', href: 'mailto:press@ubulite.com' },
             ].map((c, i) => (
               <motion.a
@@ -270,7 +270,7 @@ const Contact: React.FC = () => {
                 <div className="h-1 w-full bg-[var(--accent-strong)]/70" />
                 <div className="h-40 bg-[var(--bg-soft)] flex items-center justify-center text-[var(--muted)] text-sm">
                   <span>
-                    Map preview · {o.lat?.toFixed(3)}, {o.lng?.toFixed(3)}
+                    Map preview — {o.lat?.toFixed(3)}, {o.lng?.toFixed(3)}
                   </span>
                 </div>
                 <div className="p-5">
@@ -293,3 +293,4 @@ const Contact: React.FC = () => {
 };
 
 export default Contact;
+

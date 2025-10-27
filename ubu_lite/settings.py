@@ -51,6 +51,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
+    "0.0.0.0",  # allow binding for local dev
     "testserver",
 ]
 
@@ -203,3 +204,7 @@ EMAIL_BACKEND = os.environ.get(
     "EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend"
 )
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "no-reply@ubulite.local")
+
+# Landing page control for root URL
+# Values: 'react' (React build), 'faq' (redirect to FAQ), 'home' (templates/homepage.html)
+ROOT_LANDING = os.environ.get("ROOT_LANDING", "react")
