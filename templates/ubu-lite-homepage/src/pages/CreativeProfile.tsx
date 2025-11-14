@@ -85,8 +85,8 @@ const CreativeProfile: React.FC = () => {
             <div className="flex items-start justify-between gap-6">
               <div className="flex items-start gap-4">
                 {data.avatar && /\.(png|jpe?g|gif|webp)$/i.test(data.avatar) ? (
-                  <img src={data.avatar} alt="avatar" className="h-16 w-16 rounded-full border border-[color:var(--border)] object-cover" />
-                ) : <div className="h-16 w-16 rounded-full border border-[color:var(--border)] bg-[var(--bg-soft)]" />}
+                  <img src={data.avatar} alt="avatar" className="h-16 w-16 rounded-full border border-[color:var(--border)] object-cover" onError={(e)=>{(e.currentTarget as HTMLImageElement).src='/img/avatar.svg';}} />
+                ) : <img src="/img/avatar.svg" alt="avatar placeholder" className="h-16 w-16 rounded-full border border-[color:var(--border)] object-cover" />}
                 <div>
                   <h1 className="text-2xl font-semibold">{data.user?.username}</h1>
                   <div className="text-[var(--muted)]">{data.city || '—'} {data.region ? `• ${data.region}`: ''}</div>
@@ -115,7 +115,7 @@ const CreativeProfile: React.FC = () => {
                     <div className="font-medium text-sm">{it.title}</div>
                     <div className="text-xs text-[var(--muted)]">{it.media_type}</div>
                     {it.file && /\.(png|jpe?g|gif|webp)$/i.test(it.file) ? (
-                      <img src={it.file} alt={it.title} className="mt-2 w-full h-28 object-cover rounded-lg border border-[color:var(--border)]" />
+                      <img src={it.file} alt={it.title} className="mt-2 w-full h-28 object-cover rounded-lg border border-[color:var(--border)]" onError={(e)=>{(e.currentTarget as HTMLImageElement).src='/img/placeholder-4x3.svg';}} />
                     ) : it.external_url && /(youtube\.com|youtu\.be|vimeo\.com)/i.test(it.external_url) ? (
                       <div className="mt-2 aspect-video w-full rounded-lg overflow-hidden border border-[color:var(--border)]">
                         <iframe src={it.external_url} title={it.title} className="w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />

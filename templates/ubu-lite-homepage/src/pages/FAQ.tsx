@@ -11,7 +11,7 @@ const FAQS: FAQItem[] = [
   { id: 'what-is-ubu', cat: 'Getting started', q: 'What is UBU Lite?', a: 'UBU Lite is a lightweight marketplace to discover, contact, and book creative talent. This demo focuses on the booking flow and profile browsing.' },
   { id: 'how-to-book', cat: 'Booking', q: 'How do I book a creative?', a: 'Browse or search, open a profile, and click Hire to send a booking request. You can propose times, describe your project, and confirm together in the app.' },
   { id: 'pricing', cat: 'Getting started', q: 'Is there a cost to join?', a: 'No. This is a demo environment used for showcasing UX flows only.' },
-  { id: 'payments', cat: 'Payments', q: 'Do you take payments?', a: 'The demo integrates a Stripe test flow for illustration. Use Stripe test cards only; no real charges are created.' },
+  { id: 'payments', cat: 'Payments', q: 'Do you take payments?', a: 'The demo integrates a Paystack test flow for illustration. No real charges are created.' },
   { id: 'escrow', cat: 'Payments', q: 'How does escrow work?', a: 'When you confirm a booking, funds move into a simulated escrow. Upon completion, the creator can request release. In this demo, it is a simplified representation.' },
   { id: 'accounts', cat: 'Accounts', q: 'Can I sign in with Google?', a: 'Yes. If GOOGLE_CLIENT_ID is set in the backend, the login and register views show Google Sign-In (demo only).' },
   { id: 'support', cat: 'Platform', q: 'How do I contact support?', a: 'Use the Contact page from the navigation or email the demo address listed there. In this sandbox, messages are not actively monitored.' },

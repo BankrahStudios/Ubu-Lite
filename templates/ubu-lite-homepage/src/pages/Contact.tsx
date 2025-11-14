@@ -145,7 +145,8 @@ const Contact: React.FC = () => {
             alt="Contact hero"
             onError={() => {
               if (heroSrc === '/CONTACT US SLIDES0236.png') setHeroSrc('/BVBBV0258.png');
-              else if (heroSrc === '/BVBBV0258.png') setHeroSrc('/static/img/featured-creative.png');
+              else if (heroSrc === '/BVBBV0258.png') setHeroSrc('/img/featured-creative.svg');
+              else setHeroSrc('/img/placeholder-16x9.svg');
             }}
             className="pointer-events-none select-none absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 max-h-[85%] w-auto object-contain"
           />
@@ -293,4 +294,3 @@ const Contact: React.FC = () => {
 };
 
 export default Contact;
-

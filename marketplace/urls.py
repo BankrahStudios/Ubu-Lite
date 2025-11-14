@@ -16,6 +16,8 @@ from .views import (
     WalletView,
     WithdrawalRequestViewSet,
     PublishableKeyView,
+    PaystackInitView,
+    PaystackVerifyView,
     DemoCreateFundedOrderView,
     DemoWithdrawView,
     ReviewViewSet,
@@ -65,4 +67,7 @@ urlpatterns = [
         PublishableKeyView.as_view(),
         name="stripe-publishable-key",
     ),
+    # Paystack endpoints
+    path("payments/paystack/init/", PaystackInitView.as_view(), name="paystack-init"),
+    path("payments/paystack/verify/", PaystackVerifyView.as_view(), name="paystack-verify"),
 ]

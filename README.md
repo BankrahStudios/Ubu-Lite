@@ -20,7 +20,7 @@ This application will allow users to:
 
 Optional future features:
 - Search creatives by location
-- Payment integration (Stripe/PayPal)
+- Payment integration (Paystack/Stripe/PayPal)
 
 ---
 
@@ -136,10 +136,26 @@ python manage.py collectstatic --noinput
 3. Open the built app served by Django at:
 
 ```
+http://localhost:8000/
+# also available at
 http://localhost:8000/react-app/
 ```
 
+Notes:
+- The default landing is the React SPA (`ROOT_LANDING=react`). You can override with `ROOT_LANDING=faq` or `home`.
+- One‑liners and helpers on Windows:
+  - PowerShell build + collect static: `./scripts/build_react.ps1`
+  - Preview the static build in your browser (no server): `./scripts/build_preview.ps1 -Open`
+
 If the build directory is missing, Django will fall back to a simple informational page at `/react/`.
+
+Homepage highlights (built SPA)
+-------------------------------
+
+- Quick Booking widget with date/budget; pre-fills `/checkout`.
+- Categories sourced from `/api/categories/` when available.
+- Mobile menu with overlay, testimonials, FAQ accordion, newsletter, lazy images, dark‑mode persistence.
+- Robust dummy images and fallbacks under `templates/ubu-lite-homepage/public/img/`.
 
 ---
 
@@ -187,3 +203,30 @@ Admin and server
   - `/api/` core API (JWT protected; many endpoints allow anonymous reads)
   - `/admin/` Django admin
   - `/login/` and `/register/` templates (receive `GOOGLE_CLIENT_ID` if set in `.env`)
+
+Paystack demo checkout
+----------------------
+
+1) Add keys to `.env`:
+
+```
+PAYSTACK_PUBLIC_KEY=pk_test_xxx
+PAYSTACK_SECRET_KEY=sk_test_xxx
+# Optional (defaults to NGN)
+PAYSTACK_CURRENCY=NGN
+```
+
+2) Open the demo checkout:
+
+- Built app: http://localhost:8000/react-app/checkout
+- React dev server: http://localhost:3000/checkout
+
+The page creates a demo order and initializes Paystack via `/api/payments/paystack/init/`. On success, `/api/payments/paystack/verify/` marks the order paid and funds an escrow.
+
+Continuous Integration
+----------------------
+
+A lightweight CI checks that the React homepage builds on every push/PR:
+
+- Workflow: `.github/workflows/react-build-check.yml`
+- Runs `npm ci && npm run build` in `templates/ubu-lite-homepage` and asserts `build/index.html` and `build/static/` exist.

@@ -1,13 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UBU Lite Homepage</title>
-    <link rel="stylesheet" href="styles/home.module.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>UBU Lite Homepage</title>
+
+  <!-- Icons -->
+  <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+
+  <!-- SEO -->
+  <meta name="description" content="Book trusted creatives — designers, photographers, developers, and more. Browse portfolios, chat, and book with a simple, secure flow." />
+  <meta name="theme-color" content="#FD7702" />
+  <meta name="robots" content="index,follow" />
+
+  <!-- Social (Open Graph) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="UBU Lite — Book trusted creatives" />
+  <meta property="og:description" content="Discover top talent and book securely with escrow." />
+  <meta property="og:image" content="%PUBLIC_URL%/img/og-image.png" />
+
+  <!-- Social (Twitter) -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="UBU Lite — Book trusted creatives" />
+  <meta name="twitter:description" content="Discover top talent and book securely with escrow." />
+  <meta name="twitter:image" content="%PUBLIC_URL%/img/og-image.png" />
+
+  <!-- Performance hints -->
+  <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
+  <link rel="dns-prefetch" href="//images.unsplash.com">
+  <link rel="preconnect" href="https://js.paystack.co" crossorigin>
+  <link rel="dns-prefetch" href="//js.paystack.co">
+  <meta name="color-scheme" content="light dark" />
+
+  <!-- CRA injects compiled CSS/JS; avoid manual includes to prevent 404s -->
 </head>
 <body>
-    <div id="root"></div>
-    <script src="bundle.js"></script>
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <div id="root"></div>
 </body>
 </html>

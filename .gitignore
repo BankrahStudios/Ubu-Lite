@@ -17,3 +17,12 @@ db.sqlite3
 
 #Ignore vscode AI rules
 .github\instructions\codacy.instructions.md
+
+# Node/React (frontend)
+templates/ubu-lite-homepage/node_modules/
+templates/ubu-lite-homepage/node_modules/.cache/
+templates/ubu-lite-homepage/build/static/
+
+# Python bytecode (ensure all locations covered)
+**/__pycache__/
+*.py[cod]

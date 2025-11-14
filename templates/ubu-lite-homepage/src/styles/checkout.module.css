@@ -1,0 +1,45 @@
+:root {
+  --bg: #0b0f17;
+  --card: #111827;
+  --muted: #9ca3af;
+  --text: #e5e7eb;
+  --primary: #10b981;
+  --primary-2: #059669;
+  --border: #1f2937;
+  --error: #ef4444;
+  --success: #22c55e;
+}
+
+.checkout { padding: 24px; color: var(--text); }
+.header { display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+.header h1 { font-size: 22px; margin:0; }
+.badge { background: #1f2937; color: #a7f3d0; border: 1px solid var(--border); padding: 4px 8px; border-radius: 999px; font-size: 12px; }
+
+.grid { display:grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 860px) { .grid { grid-template-columns: 2fr 1fr; } }
+
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+.card h3 { margin: 0 0 12px; font-size: 16px; }
+
+.row { display:flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.row label { color: var(--muted); font-size: 13px; }
+.row select, .row input { background: #0b1220; color: var(--text); border: 1px solid var(--border); padding: 10px 12px; border-radius: 8px; }
+
+.summary { margin: 8px 0 12px; border-top: 1px dashed var(--border); padding-top: 10px; }
+.line, .total { display:flex; justify-content: space-between; margin: 6px 0; }
+.total { font-weight: 600; }
+
+.actions { display:flex; align-items:center; gap: 12px; margin-top: 6px; }
+.primary { background: var(--primary); border: 0; color: #051b12; font-weight: 600; padding: 10px 14px; border-radius: 8px; cursor: pointer; }
+.primary:disabled { opacity: 0.6; cursor: not-allowed; }
+.muted { color: var(--muted); font-size: 12px; }
+
+.status { list-style: none; padding: 0; margin: 0 0 12px; }
+.status li { color: var(--muted); margin: 6px 0; }
+.status li.on { color: var(--text); }
+
+.spinner { color: var(--muted); font-size: 13px; }
+.help { color: var(--muted); font-size: 13px; }
+.error { color: #fecaca; background: #7f1d1d; border: 1px solid #991b1b; padding: 8px 10px; border-radius: 8px; margin-top: 10px; font-size: 13px; }
+.success { color: #052e1c; background: #a7f3d0; border: 1px solid #34d399; padding: 8px 10px; border-radius: 8px; margin-top: 10px; font-size: 13px; }
+

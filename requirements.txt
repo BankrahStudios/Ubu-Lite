@@ -5,3 +5,4 @@ stripe
 django-cors-headers
 google-auth
 python-dotenv
+requests

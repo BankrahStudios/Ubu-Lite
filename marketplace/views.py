@@ -5,10 +5,16 @@ orders, payments and Stripe webhook handling used in the demo app.
 """
 
 import logging
+import uuid
+from decimal import Decimal
 from django.conf import settings
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 import stripe
+try:
+    import requests
+except Exception:  # pragma: no cover
+    requests = None  # type: ignore
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -626,6 +632,154 @@ class PublishableKeyView(APIView):
         return Response(
             {"publishableKey": getattr(settings, "STRIPE_PUBLISHABLE_KEY", "")}
         )
+
+
+class PaystackInitView(APIView):
+    """Initialize a Paystack transaction for an order.
+
+    POST body: { order: <id> }
+    Returns: { authorization_url, reference, public_key }
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if requests is None:
+            return Response({"detail": "requests library not available"}, status=500)
+
+        order_id = request.data.get("order")
+        order = get_object_or_404(Order, pk=order_id)
+        if order.buyer != request.user:
+            return Response({"detail": "Only the buyer may pay for this order."}, status=403)
+
+        secret = getattr(settings, "PAYSTACK_SECRET_KEY", "")
+        public_key = getattr(settings, "PAYSTACK_PUBLIC_KEY", "")
+        base_url = getattr(settings, "PAYSTACK_BASE_URL", "https://api.paystack.co").rstrip("/")
+        if not secret or not public_key:
+            return Response({"detail": "Paystack keys not configured"}, status=400)
+
+        amount_kobo = int(Decimal(str(order.total_price)) * 100)
+        reference = f"psk_{order.pk}_{uuid.uuid4().hex[:12]}"
+
+        callback = request.build_absolute_uri("/react-app/checkout")
+        raw_email = (request.user.email or "").strip()
+        # Paystack requires a valid email; fall back to example.com if missing/invalid
+        def _is_valid_email(e: str) -> bool:
+            try:
+                at = e.index("@")
+                dot = e.rfind(".")
+                return at > 0 and dot > at + 1 and dot < len(e) - 1
+            except ValueError:
+                return False
+        email_to_use = raw_email if _is_valid_email(raw_email) else f"user{request.user.id}@example.com"
+
+        init_payload = {
+            "email": email_to_use,
+            "amount": amount_kobo,
+            "reference": reference,
+            "callback_url": callback,
+            "metadata": {"order_id": order.id},
+        }
+        preferred = getattr(settings, "PAYSTACK_CURRENCY", "").strip()
+        attempts = []
+        # None means "let Paystack use merchant default"
+        attempts.append(preferred or None)
+        for alt in ("NGN", "GHS"):
+            if alt and alt != preferred:
+                attempts.append(alt)
+
+        headers = {"Authorization": f"Bearer {secret}", "Content-Type": "application/json"}
+        last_err_msg = ""
+        data = None
+        for cur in attempts:
+            payload = dict(init_payload)
+            if cur:
+                payload["currency"] = cur
+            else:
+                payload.pop("currency", None)
+            try:
+                r = requests.post(f"{base_url}/transaction/initialize", json=payload, headers=headers, timeout=20)
+                data = r.json() if r.content else {}
+            except Exception:
+                _logger.exception("Error initializing Paystack (currency=%s) for order %s", cur or "default", order.id)
+                continue
+            if r.ok and data.get("status") and data.get("data", {}).get("authorization_url"):
+                break
+            last_err_msg = (data.get("message") if isinstance(data, dict) else "error")
+            # If currency not supported, try next option
+            if not (isinstance(last_err_msg, str) and "currency" in last_err_msg.lower()):
+                break
+
+        if not (data and data.get("status") and data.get("data", {}).get("authorization_url")):
+            return Response({"detail": f"paystack: {last_err_msg or 'init failed'}"}, status=400)
+
+        auth_url = data["data"]["authorization_url"]
+        PaymentTransaction.objects.create(
+            order=order,
+            provider="paystack",
+            provider_id=reference,
+            amount=order.total_price,
+            status="created",
+        )
+        return Response({"authorization_url": auth_url, "reference": reference, "public_key": public_key})
+
+
+class PaystackVerifyView(APIView):
+    """Verify a Paystack transaction by reference and finalize the order.
+
+    POST body: { reference }
+    Returns: { status, order_id }
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if requests is None:
+            return Response({"detail": "requests library not available"}, status=500)
+
+        reference = (request.data or {}).get("reference") or (request.query_params.get("reference"))
+        if not reference:
+            return Response({"detail": "reference required"}, status=400)
+        secret = getattr(settings, "PAYSTACK_SECRET_KEY", "")
+        base_url = getattr(settings, "PAYSTACK_BASE_URL", "https://api.paystack.co").rstrip("/")
+        headers = {"Authorization": f"Bearer {secret}"}
+        try:
+            r = requests.get(f"{base_url}/transaction/verify/{reference}", headers=headers, timeout=20)
+            data = r.json() if r.content else {}
+        except Exception:
+            _logger.exception("Error verifying Paystack reference %s", reference)
+            return Response({"detail": "paystack-verify-error"}, status=400)
+
+        if not r.ok or not data.get("status"):
+            return Response({"detail": data.get("message", "verify failed")}, status=400)
+
+        status_str = data["data"].get("status")
+        pt = PaymentTransaction.objects.filter(provider="paystack", provider_id=reference).select_related("order").first()
+        if not pt:
+            return Response({"detail": "payment record not found"}, status=404)
+        order = pt.order
+        if order.buyer != request.user and not request.user.is_staff:
+            return Response({"detail": "Not your order"}, status=403)
+
+        if status_str == "success":
+            pt.status = "succeeded"
+            pt.save(update_fields=["status", "created_at"])
+            order.status = Order.Status.PAID
+            order.save(update_fields=["status", "updated_at"])
+            Escrow.objects.update_or_create(
+                order=order,
+                defaults={
+                    "amount": order.total_price,
+                    "status": Escrow.Status.FUNDED,
+                    "client_fulfilled": False,
+                    "creative_fulfilled": False,
+                },
+            )
+            return Response({"status": "succeeded", "order_id": order.id})
+        else:
+            pt.status = status_str or "failed"
+            pt.save(update_fields=["status"])
+            return Response({"status": pt.status, "order_id": order.id})
 
 
 class DemoCreateFundedOrderView(APIView):

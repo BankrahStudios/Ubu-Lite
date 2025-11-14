@@ -193,6 +193,20 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
 STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")
 
+# Paystack configuration (read from environment)
+# Note: In production, override these in the environment; the defaults below are test keys.
+PAYSTACK_PUBLIC_KEY = os.environ.get(
+    "PAYSTACK_PUBLIC_KEY",
+    "pk_test_054db4a248803e921cd4c976a72a1f12138a0f95",
+)
+PAYSTACK_SECRET_KEY = os.environ.get(
+    "PAYSTACK_SECRET_KEY",
+    "sk_test_d3c14670fcb80c91b62f31694d6010f4d8fc8867",
+)
+PAYSTACK_BASE_URL = os.environ.get("PAYSTACK_BASE_URL", "https://api.paystack.co")
+# NGN by default; adjust if your account supports other currencies
+PAYSTACK_CURRENCY = os.environ.get("PAYSTACK_CURRENCY", "NGN")
+
 # CORS for local development — restrict in production
 CORS_ALLOW_ALL_ORIGINS = True
 

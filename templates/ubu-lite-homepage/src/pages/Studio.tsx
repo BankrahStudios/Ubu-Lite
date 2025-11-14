@@ -208,8 +208,8 @@ const Studio: React.FC = () => {
             <form onSubmit={saveProfile} className="mt-3 rounded-2xl border border-[color:var(--border)] bg-[var(--card)] p-5">
               <div className="grid sm:grid-cols-2 gap-3">
                 {profile?.avatar && /\.(png|jpe?g|gif|webp)$/i.test(profile.avatar) ? (
-                  <img src={profile.avatar} alt="avatar" className="h-16 w-16 rounded-full border border-[color:var(--border)] object-cover" />
-                ) : <div className="h-16 w-16 rounded-full border border-[color:var(--border)] bg-[var(--bg-soft)]" />}
+                  <img src={profile.avatar} alt="avatar" className="h-16 w-16 rounded-full border border-[color:var(--border)] object-cover" onError={(e)=>{(e.currentTarget as HTMLImageElement).src='/img/avatar.svg';}} />
+                ) : <img src="/img/avatar.svg" alt="avatar placeholder" className="h-16 w-16 rounded-full border border-[color:var(--border)] object-cover" />}
                 <input type="file" onChange={e=>setAvatarFile(e.target.files?.[0]||null)} className="" />
                 <input value={pCity} onChange={e=>setPCity(e.target.value)} placeholder="City" className="pill border border-[color:var(--border)] bg-[var(--bg-soft)] px-3 py-2" />
                 <input value={pRegion} onChange={e=>setPRegion(e.target.value)} placeholder="Region" className="pill border border-[color:var(--border)] bg-[var(--bg-soft)] px-3 py-2" />
@@ -241,7 +241,7 @@ const Studio: React.FC = () => {
                   <div className="text-sm font-medium">{it.title}</div>
                   <div className="text-xs text-[var(--muted)]">{it.media_type}</div>
                   {it.file && /\.(png|jpe?g|gif|webp)$/i.test(it.file) ? (
-                    <img src={it.file} alt={it.title} className="mt-2 w-full h-28 object-cover rounded-lg border border-[color:var(--border)]" />
+                    <img src={it.file} alt={it.title} className="mt-2 w-full h-28 object-cover rounded-lg border border-[color:var(--border)]" onError={(e)=>{(e.currentTarget as HTMLImageElement).src='/img/placeholder-4x3.svg';}} />
                   ) : it.file ? (
                     <a className="text-xs text-[var(--navy-800)] underline" href={it.file} target="_blank">Open file</a>
                   ) : null}
